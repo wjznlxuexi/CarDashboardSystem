@@ -1,119 +1,110 @@
 #include "tempgaugewidget.h"
+
 #include <QPainter>
-#include <QtMath>
+#include <QtGlobal>
 
 TempGaugeWidget::TempGaugeWidget(QWidget *parent)
-    : QWidget(parent), m_temperature(40.0)
+    : QWidget(parent),
+      m_temperature(80.0),
+      m_highTemperatureActive(false)
 {
-    setMinimumSize(300, 350);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumSize(150, 170);
+    setAttribute(Qt::WA_TranslucentBackground);
 }
 
-void TempGaugeWidget::setTemperature(double temp)
+void TempGaugeWidget::setTemperature(double temperature)
 {
-    if (temp < 40) temp = 40;
-    if (temp > 120) temp = 120;
-    m_temperature = temp;
-    emit highTemperatureStateChanged(m_temperature > 95.0);
+    m_temperature = qBound(40.0, temperature, 120.0);
+
+    const bool high = m_temperature > 95.0;
+    if(high != m_highTemperatureActive)
+    {
+        m_highTemperatureActive = high;
+        emit highTemperatureStateChanged(high);
+    }
+
     update();
 }
 
-void TempGaugeWidget::paintEvent(QPaintEvent *)
+double TempGaugeWidget::valueToAngle(double value) const
 {
+    return -115.0 + (qBound(40.0, value, 120.0) - 40.0) / 80.0 * 230.0;
+}
+
+void TempGaugeWidget::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    int side = qMin(width(), height() - 30);
-    painter.setViewport((width() - side) / 2, (height() - side - 30) / 2, side, side);
-    painter.setWindow(0, 0, 200, 200);
+    const int side = qMin(width(), height());
+    painter.translate(width() / 2, height() / 2);
+    painter.scale(side / 210.0, side / 210.0);
 
-    painter.setBrush(QColor(20,20,30));
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(10,10,180,180);
+    drawGauge(painter, 88);
+}
 
-    painter.setPen(QPen(QColor(80,80,100),2));
+void TempGaugeWidget::drawGauge(QPainter &painter, int radius)
+{
+    Q_UNUSED(radius);
+    painter.save();
+
+    QRectF body(-86, -88, 172, 176);
+    painter.setPen(QPen(QColor(36, 75, 100), 1));
+    painter.setBrush(QColor(4, 13, 22, 220));
+    painter.drawRoundedRect(body, 8, 8);
+
+    painter.setPen(QColor(119, 225, 250));
+    painter.setFont(QFont("Arial", 13, QFont::Bold));
+    painter.drawText(QRect(-70, -78, 140, 22), Qt::AlignCenter, "COOLANT");
+
+    QRectF channel(-58, -48, 34, 104);
+    painter.setPen(QPen(QColor(31, 64, 84), 2));
+    painter.setBrush(QColor(1, 7, 13));
+    painter.drawRoundedRect(channel, 8, 8);
+
+    const int segments = 10;
+    const double ratio = (m_temperature - 40.0) / 80.0;
+    const int activeSegments = qBound(0, static_cast<int>(ratio * segments + 0.5), segments);
+    for(int i = 0; i < segments; ++i)
+    {
+        const int y = 45 - i * 9;
+        QRectF segment(-51, y, 20, 6);
+        const bool active = i < activeSegments;
+        QColor color = QColor(24, 60, 73);
+        if(active)
+        {
+            if(i >= 7)
+                color = QColor(255, 74, 78);
+            else if(i >= 5)
+                color = QColor(255, 174, 57);
+            else
+                color = QColor(57, 191, 255);
+        }
+
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(color);
+        painter.drawRoundedRect(segment, 2, 2);
+    }
+
+    painter.setPen(QColor(96, 135, 150));
+    painter.setFont(QFont("Arial", 9, QFont::Bold));
+    painter.drawText(QRect(-64, -58, 48, 16), Qt::AlignCenter, "HOT");
+    painter.drawText(QRect(-64, 56, 48, 16), Qt::AlignCenter, "COLD");
+
+    painter.setPen(m_highTemperatureActive ? QColor(255, 74, 78) : QColor(237, 249, 255));
+    painter.setFont(QFont("Consolas", 24, QFont::Bold));
+    painter.drawText(QRect(-12, -18, 92, 34), Qt::AlignCenter,
+                     QString("%1").arg(m_temperature, 0, 'f', 1));
+
+    painter.setPen(QColor(117, 197, 220));
+    painter.setFont(QFont("Arial", 11, QFont::Bold));
+    painter.drawText(QRect(-14, 17, 92, 22), Qt::AlignCenter, "CELSIUS");
+
+    painter.setPen(QPen(m_highTemperatureActive ? QColor(255, 74, 78) : QColor(57, 191, 255), 2));
     painter.setBrush(Qt::NoBrush);
-    painter.drawEllipse(10,10,180,180);
+    painter.drawRoundedRect(QRectF(-73, -63, 146, 136), 7, 7);
 
-    // 角度定义：40℃=135°，120℃=405°
-    const double startAngle = 135.0;
-    const double endAngle   = 405.0;
-    const double range = endAngle - startAngle;
-
-    QFont font = painter.font();
-    font.setPointSize(11);
-    painter.setFont(font);
-    painter.setPen(QPen(Qt::white, 2));
-
-    int mainTicks[] = {40, 60, 80, 100, 120};
-    for (int temp : mainTicks)
-    {
-        double ratio = (temp - 40.0) / 80.0;
-        double angle = startAngle + ratio * range;
-        double normAngle = fmod(angle, 360.0);
-        double rad = normAngle * M_PI / 180.0;
-        double dx = cos(rad);
-        double dy = sin(rad);
-
-        int inner = 80;
-        int outer = 94;
-        int x1 = 100 + inner * dx;
-        int y1 = 100 + inner * dy;
-        int x2 = 100 + outer * dx;
-        int y2 = 100 + outer * dy;
-        painter.drawLine(x1, y1, x2, y2);
-
-        int textRadius = 62;
-        int xText = 100 + textRadius * dx;
-        int yText = 100 + textRadius * dy;
-        QString text = QString::number(temp);
-        QRect rect(xText - 13, yText - 10, 26, 20);
-        painter.drawText(rect, Qt::AlignCenter, text);
-    }
-
-    int subTicks[] = {50,70,90,110};
-    painter.setPen(QPen(Qt::white,1));
-    for (int temp : subTicks)
-    {
-        double ratio = (temp - 40.0) / 80.0;
-        double angle = startAngle + ratio * range;
-        double normAngle = fmod(angle, 360.0);
-        double rad = normAngle * M_PI / 180.0;
-        double dx = cos(rad);
-        double dy = sin(rad);
-        int inner = 80;
-        int outer = 88;
-        int x1 = 100 + inner * dx;
-        int y1 = 100 + inner * dy;
-        int x2 = 100 + outer * dx;
-        int y2 = 100 + outer * dy;
-        painter.drawLine(x1, y1, x2, y2);
-    }
-
-    // 指针
-    double ratio = (m_temperature - 40.0) / 80.0;
-    double angle = startAngle + ratio * range;
-    double normAngle = fmod(angle, 360.0);
-    double rad = normAngle * M_PI / 180.0;
-    double dx = cos(rad);
-    double dy = sin(rad);
-    int tipX = 100 + 50 * dx;
-    int tipY = 100 + 50 * dy;
-    painter.setPen(QPen(Qt::red,4));
-    painter.drawLine(100,100,tipX,tipY);
-    painter.setBrush(Qt::white);
-    painter.drawEllipse(96,96,8,8);
-    painter.setBrush(QColor(60,60,80));
-    painter.drawEllipse(94,94,12,12);
-
-    // 在表盘内部六点钟方向绘制数值框（缩小版）
-    painter.setPen(QPen(Qt::white, 1));
-    painter.setBrush(Qt::white);
-    QRectF textRect(83, 162, 34, 20);
-    painter.drawRoundedRect(textRect, 3, 3);
-    painter.setPen(Qt::black);
-    QFont valueFont;
-    valueFont.setPointSize(8);
-    painter.setFont(valueFont);
-    painter.drawText(textRect, Qt::AlignCenter, QString::number(m_temperature, 'f', 0) + "℃");
+    painter.restore();
 }

@@ -2,8 +2,9 @@
 #define TURNINDICATORWIDGET_H
 
 #include <QWidget>
-#include <QTimer>
-#include <QPixmap>
+
+class QTimer;
+class QPainter;
 
 class TurnIndicatorWidget : public QWidget
 {
@@ -23,15 +24,12 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    void drawArrow(QPainter &painter, const QRect &rect, bool left, bool active);
+
     int m_signal;
     bool m_hazard;
     bool m_blinkOn;
     QTimer *m_blinkTimer;
-    QPixmap m_leftPixmap;
-    QPixmap m_rightPixmap;
-    QPixmap m_leftPixmapDimmed;
-    QPixmap m_rightPixmapDimmed;
 };
 
-#endif
-
+#endif // TURNINDICATORWIDGET_H

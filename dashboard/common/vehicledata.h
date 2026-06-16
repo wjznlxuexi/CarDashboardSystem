@@ -1,6 +1,8 @@
 #ifndef VEHICLEDATA_H
 #define VEHICLEDATA_H
 
+#include <QMetaType>
+
 struct VehicleData
 {
     double speed;
@@ -21,8 +23,8 @@ struct VehicleData
     {
         speed = 0.0;
         rpm = 0;
-        fuel = 60.0;
-        temperature = 80.0;
+        fuel = 7.0;
+        temperature = 82.0;
 
         turnSignal = 0;
         hazard = false;
@@ -34,5 +36,7 @@ struct VehicleData
         speedFault = false;
     }
 };
+
+Q_DECLARE_METATYPE(VehicleData)
 
 #endif // VEHICLEDATA_H

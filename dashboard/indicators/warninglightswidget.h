@@ -1,21 +1,12 @@
 #ifndef WARNINGLIGHTSWIDGET_H
 #define WARNINGLIGHTSWIDGET_H
 
-#include <QWidget>
-#include <QLabel>
 #include <QPixmap>
+#include <QWidget>
 
-enum WarningType
-{
-    Warning_Engine = 0,
-    Warning_Oil,
-    Warning_Battery,
-    Warning_Temp,
-    Warning_Fuel,
-    Warning_Brake,
-    Warning_Airbag,
-    Warning_ABS
-};
+#include "common/warningtype.h"
+
+class QLabel;
 
 class WarningLightsWidget : public QWidget
 {
@@ -29,13 +20,14 @@ public slots:
     void clearAllWarnings();
 
 private:
-    QLabel *m_labels[8];
-    QPixmap m_originalPixmaps[8];
-    QPixmap m_dimmedPixmaps[8];
-    bool m_activeStates[8];
-
     void loadWarningImages();
+    void updateWarningPixmap(int warningType);
     QPixmap createDimmedPixmap(const QPixmap &source);
+
+    QLabel *m_labels[Warning_Count];
+    QPixmap m_originalPixmaps[Warning_Count];
+    QPixmap m_dimmedPixmaps[Warning_Count];
+    bool m_activeStates[Warning_Count];
 };
 
-#endif
+#endif // WARNINGLIGHTSWIDGET_H

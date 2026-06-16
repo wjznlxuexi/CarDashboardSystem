@@ -3,12 +3,14 @@
 
 #include <QWidget>
 
+class QPainter;
+
 class FuelGaugeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit FuelGaugeWidget(QWidget *parent = nullptr);
+    explicit FuelGaugeWidget(QWidget *parent = NULL);
 
 public slots:
     void setFuelValue(double fuel);
@@ -20,7 +22,11 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    double valueToAngle(double value) const;
+    void drawGauge(QPainter &painter, int radius);
+
     double m_fuel;
+    bool m_lowFuelActive;
 };
 
-#endif
+#endif // FUELGAUGEWIDGET_H

@@ -1,62 +1,60 @@
 #include "warninglightswidget.h"
+
 #include <QGridLayout>
+#include <QLabel>
 #include <QPainter>
 
 WarningLightsWidget::WarningLightsWidget(QWidget *parent)
     : QWidget(parent)
 {
-    for (int i = 0; i < 8; ++i)
+    for(int i = 0; i < Warning_Count; ++i)
+    {
+        m_labels[i] = NULL;
         m_activeStates[i] = false;
+    }
 
     loadWarningImages();
 
     QGridLayout *layout = new QGridLayout(this);
+    layout->setContentsMargins(6, 6, 6, 6);
     layout->setSpacing(8);
 
-    for (int i = 0; i < 8; ++i)
+    for(int i = 0; i < Warning_Count; ++i)
     {
         m_labels[i] = new QLabel(this);
         m_labels[i]->setAlignment(Qt::AlignCenter);
-        m_labels[i]->setMinimumSize(64, 64);
-        m_labels[i]->setScaledContents(false);
+        m_labels[i]->setFixedSize(54, 54);
+        m_labels[i]->setStyleSheet("background-color: rgba(2, 8, 14, 180); border: 1px solid #21384c; border-radius: 6px;");
 
-        int row = i / 4;
-        int col = i % 4;
-        layout->addWidget(m_labels[i], row, col);
-
-        if (!m_dimmedPixmaps[i].isNull())
-            m_labels[i]->setPixmap(m_dimmedPixmaps[i]);
+        layout->addWidget(m_labels[i], i / 4, i % 4);
+        updateWarningPixmap(i);
     }
-
-    setLayout(layout);
 }
 
 void WarningLightsWidget::setWarningActive(int warningType, bool active)
 {
-    if (warningType < 0 || warningType > 7)
+    if(warningType < 0 || warningType >= Warning_Count)
+        return;
+
+    if(m_activeStates[warningType] == active)
         return;
 
     m_activeStates[warningType] = active;
-
-    if (active && !m_originalPixmaps[warningType].isNull())
-        m_labels[warningType]->setPixmap(m_originalPixmaps[warningType]);
-    else if (!m_dimmedPixmaps[warningType].isNull())
-        m_labels[warningType]->setPixmap(m_dimmedPixmaps[warningType]);
+    updateWarningPixmap(warningType);
 }
 
 void WarningLightsWidget::clearAllWarnings()
 {
-    for (int i = 0; i < 8; ++i)
+    for(int i = 0; i < Warning_Count; ++i)
     {
         m_activeStates[i] = false;
-        if (!m_dimmedPixmaps[i].isNull())
-            m_labels[i]->setPixmap(m_dimmedPixmaps[i]);
+        updateWarningPixmap(i);
     }
 }
 
 void WarningLightsWidget::loadWarningImages()
 {
-    const char *resourcePaths[8] = {
+    const char *resourcePaths[Warning_Count] = {
         ":/images/warning_speed.png",
         ":/images/warning_oil.png",
         ":/images/warning_battery.png",
@@ -67,11 +65,41 @@ void WarningLightsWidget::loadWarningImages()
         ":/images/warning_abs.png"
     };
 
-    for (int i = 0; i < 8; ++i)
+    for(int i = 0; i < Warning_Count; ++i)
     {
-        m_originalPixmaps[i] = QPixmap(resourcePaths[i]);
-        if (!m_originalPixmaps[i].isNull())
+        m_originalPixmaps[i] = QPixmap(resourcePaths[i]).scaled(
+                    40, 40, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        if(!m_originalPixmaps[i].isNull())
             m_dimmedPixmaps[i] = createDimmedPixmap(m_originalPixmaps[i]);
+    }
+}
+
+void WarningLightsWidget::updateWarningPixmap(int warningType)
+{
+    if(m_labels[warningType] == NULL)
+        return;
+
+    const QPixmap &pixmap = m_activeStates[warningType]
+            ? m_originalPixmaps[warningType]
+            : m_dimmedPixmaps[warningType];
+
+    if(!pixmap.isNull())
+    {
+        m_labels[warningType]->setPixmap(pixmap);
+        m_labels[warningType]->setText(QString());
+    }
+    else
+    {
+        static const char *names[Warning_Count] = {
+            "SPD", "OIL", "BAT", "TMP", "FUL", "BRK", "AIR", "ABS"
+        };
+        m_labels[warningType]->setPixmap(QPixmap());
+        m_labels[warningType]->setText(names[warningType]);
+        m_labels[warningType]->setStyleSheet(
+                    m_activeStates[warningType]
+                    ? "color:#ff6b5f; font-weight:bold; background-color:#240b0b; border:1px solid #ff6b5f; border-radius:6px;"
+                    : "color:#425363; font-weight:bold; background-color:rgba(2,8,14,180); border:1px solid #21384c; border-radius:6px;");
     }
 }
 
@@ -81,7 +109,7 @@ QPixmap WarningLightsWidget::createDimmedPixmap(const QPixmap &source)
     dimmed.fill(Qt::transparent);
 
     QPainter painter(&dimmed);
-    painter.setOpacity(0.25);
+    painter.setOpacity(0.22);
     painter.drawPixmap(0, 0, source);
     painter.end();
 

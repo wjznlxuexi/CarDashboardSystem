@@ -1,11 +1,13 @@
 #ifndef NETWORKCLIENT_H
 #define NETWORKCLIENT_H
 
+#include <QByteArray>
 #include <QObject>
+#include <QAbstractSocket>
 #include <QTcpSocket>
 #include <QTimer>
-#include <QByteArray>
-#include "vehicledata.h"
+
+#include "common/vehicledata.h"
 
 class NetworkClient : public QObject
 {
@@ -31,10 +33,12 @@ private slots:
     void onDisconnected();
     void onReadyRead();
     void onReconnectTimeout();
+    void onSocketError(QAbstractSocket::SocketError error);
 
 private:
-    VehicleData parseJsonToVehicleData(const QByteArray &jsonData);
+    VehicleData parseJsonToVehicleData(const QByteArray &jsonData, bool *ok) const;
     void processReceivedData();
+    void scheduleReconnect();
 
     QTcpSocket *m_socket;
     QTimer *m_reconnectTimer;
@@ -45,4 +49,4 @@ private:
     bool m_intentionalDisconnect;
 };
 
-#endif
+#endif // NETWORKCLIENT_H

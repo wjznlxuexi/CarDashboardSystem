@@ -3,12 +3,14 @@
 
 #include <QWidget>
 
+class QPainter;
+
 class TempGaugeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit TempGaugeWidget(QWidget *parent = nullptr);
+    explicit TempGaugeWidget(QWidget *parent = NULL);
 
 public slots:
     void setTemperature(double temperature);
@@ -20,7 +22,11 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    double valueToAngle(double value) const;
+    void drawGauge(QPainter &painter, int radius);
+
     double m_temperature;
+    bool m_highTemperatureActive;
 };
 
-#endif
+#endif // TEMPGAUGEWIDGET_H

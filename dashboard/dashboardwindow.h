@@ -18,6 +18,7 @@ class TempGaugeWidget;
 class TurnIndicatorWidget;
 class WarningLightsWidget;
 class WarningSoundSystem;
+class ImageDashboardWidget;
 
 /*
  * DashboardWindow 仅负责：
@@ -75,6 +76,7 @@ private:
     TurnIndicatorWidget *m_turnIndicator;
     WarningLightsWidget *m_warningLights;
     WarningSoundSystem *m_soundSystem;
+    ImageDashboardWidget *m_imageDashboard;
 
     QLabel *m_connectionLabel;
     QLabel *m_dataLabel;

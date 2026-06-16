@@ -1,104 +1,102 @@
 #include "fuelgaugewidget.h"
+
 #include <QPainter>
-#include <QtMath>
+#include <QtGlobal>
 
 FuelGaugeWidget::FuelGaugeWidget(QWidget *parent)
-    : QWidget(parent), m_fuel(0.0)
+    : QWidget(parent),
+      m_fuel(60.0),
+      m_lowFuelActive(false)
 {
-    setMinimumSize(300, 350);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumSize(150, 170);
+    setAttribute(Qt::WA_TranslucentBackground);
 }
 
 void FuelGaugeWidget::setFuelValue(double fuel)
 {
-    if (fuel < 0) fuel = 0;
-    if (fuel > 60) fuel = 60;
-    m_fuel = fuel;
-    emit lowFuelStateChanged(m_fuel < 15.0);
+    m_fuel = qBound(0.0, fuel, 60.0);
+
+    const bool low = m_fuel < 15.0;
+    if(low != m_lowFuelActive)
+    {
+        m_lowFuelActive = low;
+        emit lowFuelStateChanged(low);
+    }
+
     update();
 }
 
-void FuelGaugeWidget::paintEvent(QPaintEvent *)
+double FuelGaugeWidget::valueToAngle(double value) const
 {
+    return -115.0 + qBound(0.0, value, 60.0) / 60.0 * 230.0;
+}
+
+void FuelGaugeWidget::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    int side = qMin(width(), height() - 40);
-    painter.setViewport((width() - side) / 2, 10, side, side);
-    painter.setWindow(0, 0, 200, 200);
+    const int side = qMin(width(), height());
+    painter.translate(width() / 2, height() / 2);
+    painter.scale(side / 210.0, side / 210.0);
 
-    painter.setBrush(QColor(20, 20, 30));
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(10, 10, 180, 180);
+    drawGauge(painter, 88);
+}
 
-    painter.setPen(QPen(QColor(80, 80, 100), 2));
-    painter.setBrush(Qt::NoBrush);
-    painter.drawEllipse(10, 10, 180, 180);
+void FuelGaugeWidget::drawGauge(QPainter &painter, int radius)
+{
+    Q_UNUSED(radius);
+    painter.save();
 
-    // 角度定义：0°=三点钟，顺时针增加。0L=135°，60L=405°
-    const double startAngle = 135.0;
-    const double endAngle   = 405.0;
-    const double range = endAngle - startAngle; // 270°
+    QRectF body(-86, -88, 172, 176);
+    painter.setPen(QPen(QColor(36, 75, 100), 1));
+    painter.setBrush(QColor(4, 13, 22, 220));
+    painter.drawRoundedRect(body, 8, 8);
 
-    QFont font = painter.font();
-    font.setPointSize(11);
-    painter.setFont(font);
-    painter.setPen(QPen(Qt::white, 2));
+    painter.setPen(QColor(119, 225, 250));
+    painter.setFont(QFont("Arial", 13, QFont::Bold));
+    painter.drawText(QRect(-70, -78, 140, 22), Qt::AlignCenter, "FUEL");
 
-    for (int fuel = 0; fuel <= 60; fuel += 5)
+    QRectF tank(-58, -48, 34, 104);
+    painter.setPen(QPen(QColor(31, 64, 84), 2));
+    painter.setBrush(QColor(1, 7, 13));
+    painter.drawRoundedRect(tank, 8, 8);
+
+    const int segments = 10;
+    const int activeSegments = qBound(0, static_cast<int>(m_fuel / 60.0 * segments + 0.5), segments);
+    for(int i = 0; i < segments; ++i)
     {
-        double ratio = fuel / 60.0;
-        double angle = startAngle + ratio * range;
-        double normAngle = fmod(angle, 360.0);
-        double rad = normAngle * M_PI / 180.0;
-        double dx = cos(rad);
-        double dy = sin(rad);
+        const int y = 45 - i * 9;
+        QRectF segment(-51, y, 20, 6);
+        const bool active = i < activeSegments;
+        QColor color = QColor(24, 60, 73);
+        if(active)
+            color = m_lowFuelActive ? QColor(255, 177, 54) : QColor(57, 231, 143);
 
-        int inner = 80;
-        int outer = 86;
-        if (fuel % 20 == 0) {
-            outer = 92;
-            // 数字半径68
-            int xText = 100 + 68 * dx;
-            int yText = 100 + 68 * dy;
-            QString text = QString::number(fuel);
-            QRect rect(xText - 10, yText - 10, 20, 20);
-            painter.drawText(rect, Qt::AlignCenter, text);
-        } else if (fuel % 10 == 0) {
-            outer = 89;
-        }
-        int x1 = 100 + inner * dx;
-        int y1 = 100 + inner * dy;
-        int x2 = 100 + outer * dx;
-        int y2 = 100 + outer * dy;
-        painter.drawLine(x1, y1, x2, y2);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(color);
+        painter.drawRoundedRect(segment, 2, 2);
     }
 
-    // 指针
-    double ratio = m_fuel / 60.0;
-    double angle = startAngle + ratio * range;
-    double normAngle = fmod(angle, 360.0);
-    double rad = normAngle * M_PI / 180.0;
-    double dx = cos(rad);
-    double dy = sin(rad);
-    int tipX = 100 + 58 * dx;
-    int tipY = 100 + 58 * dy;
-    painter.setPen(QPen(Qt::red, 3));
-    painter.drawLine(100, 100, tipX, tipY);
-    painter.setBrush(Qt::white);
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(96, 96, 8, 8);
-    painter.setBrush(QColor(60, 60, 80));
-    painter.drawEllipse(94, 94, 12, 12);
+    painter.setPen(QColor(96, 135, 150));
+    painter.setFont(QFont("Arial", 9, QFont::Bold));
+    painter.drawText(QRect(-64, -58, 48, 16), Qt::AlignCenter, "FULL");
+    painter.drawText(QRect(-64, 56, 48, 16), Qt::AlignCenter, "LOW");
 
-    // 在表盘内部六点钟方向绘制数值框（缩小版）
-    painter.setPen(QPen(Qt::white, 1));
-    painter.setBrush(Qt::white);
-    QRectF textRect(83, 162, 34, 20);   // 更小
-    painter.drawRoundedRect(textRect, 3, 3);
-    painter.setPen(Qt::black);
-    QFont valueFont;
-    valueFont.setPointSize(8);           // 字体更小
-    painter.setFont(valueFont);
-    painter.drawText(textRect, Qt::AlignCenter, QString::number(m_fuel, 'f', 0) + "L");
+    painter.setPen(m_lowFuelActive ? QColor(255, 177, 54) : QColor(237, 249, 255));
+    painter.setFont(QFont("Consolas", 24, QFont::Bold));
+    painter.drawText(QRect(-14, -18, 92, 34), Qt::AlignCenter,
+                     QString("%1").arg(m_fuel, 0, 'f', 1));
+
+    painter.setPen(QColor(117, 197, 220));
+    painter.setFont(QFont("Arial", 11, QFont::Bold));
+    painter.drawText(QRect(-14, 17, 92, 22), Qt::AlignCenter, "LITERS");
+
+    painter.setPen(QPen(m_lowFuelActive ? QColor(255, 177, 54) : QColor(55, 231, 143), 2));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(QRectF(-73, -63, 146, 136), 7, 7);
+
+    painter.restore();
 }

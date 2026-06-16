@@ -32,8 +32,7 @@ HEADERS += dashboardwindow.h \
 
 FORMS += dashboardwindow.ui
 
-RESOURCES += resources/dashboard.qrc \
-    resources/dashboard.qrc
+RESOURCES += resources/dashboard.qrc
 
 INCLUDEPATH += $$PWD \
                $$PWD/common \

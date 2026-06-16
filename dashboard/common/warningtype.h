@@ -10,7 +10,8 @@ enum WarningType
     Warning_Fuel,
     Warning_Brake,
     Warning_Airbag,
-    Warning_ABS
+    Warning_ABS,
+    Warning_Count
 };
 
 #endif // WARNINGTYPE_H
