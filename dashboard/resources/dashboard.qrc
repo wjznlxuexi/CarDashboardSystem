@@ -1,3 +1,28 @@
 <RCC>
-    <qresource prefix="/"/>
+    <qresource prefix="/">
+        <file>images/warning_abs.png</file>
+        <file>images/warning_air_bag.png</file>
+        <file>images/warning_battery_fault.png</file>
+        <file>images/warning_brake.png</file>
+        <file>images/warning_fuel.jpeg</file>
+        <file>images/warning_left_on.png</file>
+        <file>images/warning_right_on.png</file>
+        <file>images/warning_temp.jpg</file>
+        <file>background/background1.jpeg</file>
+        <file>background/background2.jpeg</file>
+        <file>background/background3.jpeg</file>
+        <file>background/background4.jpeg</file>
+        <file>images/warning_engine.png</file>
+        <file>sounds/warning_abs.wav</file>
+        <file>sounds/warning_airbag.wav</file>
+        <file>sounds/warning_battery.wav</file>
+        <file>sounds/warning_brake.wav</file>
+        <file>sounds/warning_engine.wav</file>
+        <file>sounds/warning_fuel.wav</file>
+        <file>sounds/warning_oil.wav</file>
+        <file>sounds/warning_temp.wav</file>
+        <file>images/warning_left_off.png</file>
+        <file>images/warning_oil.png</file>
+        <file>images/warning_right_off.png</file>
+    </qresource>
 </RCC>
