@@ -15,7 +15,7 @@
         <file alias="warning_right_off.png">images/warning_right_off.png</file>
     </qresource>
     <qresource prefix="/background">
-        <file alias="dashboard.png">../../dashboard.png</file>
+        <file alias="dashboard.png">background/dashboard.png</file>
         <file alias="background1.jpeg">background/background1.jpeg</file>
         <file alias="background2.jpeg">background/background2.jpeg</file>
         <file alias="background3.jpeg">background/background3.jpeg</file>
