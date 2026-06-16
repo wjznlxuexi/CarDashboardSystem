@@ -45,6 +45,8 @@ public:
         setMinimumSize(980, 500);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+        m_background.load(":/background/dashboard.png");
+
         const QString appDir = QCoreApplication::applicationDirPath();
         const QString currentDir = QDir::currentPath();
         const QStringList candidates = QStringList()
@@ -56,7 +58,7 @@ public:
         for(int i = 0; i < candidates.size(); ++i)
         {
             const QFileInfo info(QDir::cleanPath(candidates[i]));
-            if(info.exists() && m_background.load(info.absoluteFilePath()))
+            if(m_background.isNull() && info.exists() && m_background.load(info.absoluteFilePath()))
                 break;
         }
 
