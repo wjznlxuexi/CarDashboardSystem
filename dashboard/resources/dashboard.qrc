@@ -21,4 +21,14 @@
         <file alias="background3.jpeg">background/background3.jpeg</file>
         <file alias="background4.jpeg">background/background4.jpeg</file>
     </qresource>
+    <qresource prefix="/sounds">
+         <file alias="warning_abs.wav">sounds/warning_abs.wav</file>
+         <file alias="warning_airbag.wav">sounds/warning_airbag.wav</file>
+         <file alias="warning_battery.wav">sounds/warning_battery.wav</file>
+         <file alias="warning_brake.wav">sounds/warning_brake.wav</file>
+         <file alias="warning_engine.wav">sounds/warning_engine.wav</file>
+         <file alias="warning_fuel.wav">sounds/warning_fuel.wav</file>
+         <file alias="warning_oil.wav">sounds/warning_oil.wav</file>
+         <file alias="warning_temp.wav">sounds/warning_temp.wav</file>
+    </qresource>
 </RCC>
