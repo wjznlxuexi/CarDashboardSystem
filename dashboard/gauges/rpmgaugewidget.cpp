@@ -13,12 +13,6 @@ RpmGaugeWidget::RpmGaugeWidget(QWidget *parent) :
   , m_cx(200)
   , m_cy(200)
 {
-    //设置窗口标题
-    setWindowTitle(QString :: fromUtf8("Qt汽车仪表盘"));
-
-    //设置深色背景
-    setStyleSheet("background-color: #1a1a2e;");
-
     //初始化
     m_targetRpm = m_displayRpm;
     DIAL_RADIUS = width() * 0.3;
