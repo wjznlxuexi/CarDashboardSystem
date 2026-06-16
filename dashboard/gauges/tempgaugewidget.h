@@ -3,16 +3,24 @@
 
 #include <QWidget>
 
-class tempgaugewidget : public QWidget
+class TempGaugeWidget : public QWidget
 {
     Q_OBJECT
-public:
-    explicit tempgaugewidget(QWidget *parent = 0);
 
-signals:
+public:
+    explicit TempGaugeWidget(QWidget *parent = nullptr);
 
 public slots:
+    void setTemperature(double temperature);
 
+signals:
+    void highTemperatureStateChanged(bool active);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    double m_temperature;
 };
 
-#endif // TEMPGAUGEWIDGET_H
+#endif

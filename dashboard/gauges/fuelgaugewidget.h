@@ -3,16 +3,24 @@
 
 #include <QWidget>
 
-class fuelgaugewidget : public QWidget
+class FuelGaugeWidget : public QWidget
 {
     Q_OBJECT
-public:
-    explicit fuelgaugewidget(QWidget *parent = 0);
 
-signals:
+public:
+    explicit FuelGaugeWidget(QWidget *parent = nullptr);
 
 public slots:
+    void setFuelValue(double fuel);
 
+signals:
+    void lowFuelStateChanged(bool active);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    double m_fuel;
 };
 
-#endif // FUELGAUGEWIDGET_H
+#endif
