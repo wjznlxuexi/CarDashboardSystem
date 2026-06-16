@@ -1,11 +1,22 @@
 #include "dashboardwindow.h"
+#include "common/vehicledata.h"
+
 #include <QApplication>
+#include <QCoreApplication>
+#include <QFont>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    DashboardWindow w;
-    w.show();
+    QApplication application(argc, argv);
 
-    return a.exec();
+    QCoreApplication::setOrganizationName("WuhanTextileUniversity");
+    QCoreApplication::setApplicationName("CarDashboardSystem");
+    QApplication::setFont(QFont("Microsoft YaHei", 10));
+
+    qRegisterMetaType<VehicleData>("VehicleData");
+
+    DashboardWindow window;
+    window.show();
+
+    return application.exec();
 }
