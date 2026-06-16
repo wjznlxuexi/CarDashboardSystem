@@ -3,31 +3,40 @@
 
 #include <QObject>
 #include <QTimer>
-#include <cmath>
+
 #include "common/vehicledata.h"
 
 class SignalGenerator : public QObject
 {
     Q_OBJECT
-public:
-    explicit SignalGenerator(QObject *parent = nullptr);
 
-    void start();           // 开始生成数据
-    void stop();            // 停止定时器
-    void reset();           // 重置所有状态到初始值
+public:
+    explicit SignalGenerator(QObject *parent = NULL);
+
+    void start();
+    void stop();
+    void reset();
+    void setTurnSignal(int signal);
+    void setHazardEnabled(bool enabled);
+    void setManualMode(bool enabled);
+    void setManualSpeed(double speed);
+    void setManualFuel(double fuel);
+    void setManualTemperature(double temperature);
 
 signals:
-    void vehicleDataGenerated(const VehicleData &data);   // 每100ms发出一次
+    void vehicleDataGenerated(const VehicleData &data);
 
 private slots:
-    void generateData();    // 定时器槽函数
+    void generateData();
 
 private:
     QTimer *m_timer;
     VehicleData m_currentData;
-
-    // 用于正弦波和随机游走的辅助变量
-    int m_step;             // 步数计数，用于速度正弦波
+    int m_step;
+    bool m_manualMode;
+    double m_manualSpeed;
+    double m_manualFuel;
+    double m_manualTemperature;
 };
 
 #endif // SIGNALGENERATOR_H

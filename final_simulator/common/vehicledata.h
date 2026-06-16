@@ -1,6 +1,8 @@
 #ifndef VEHICLEDATA_H
 #define VEHICLEDATA_H
 
+#include <QMetaType>
+
 struct VehicleData
 {
     double speed;
@@ -34,5 +36,7 @@ struct VehicleData
         speedFault = false;
     }
 };
+
+Q_DECLARE_METATYPE(VehicleData)
 
 #endif // VEHICLEDATA_H
