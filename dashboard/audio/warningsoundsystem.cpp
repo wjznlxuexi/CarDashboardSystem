@@ -17,8 +17,11 @@ static QUrl soundUrlForFile(const QString &fileName)
     const QStringList candidates = QStringList()
             << appDir + "/../resources/sounds/" + fileName
             << appDir + "/resources/sounds/" + fileName
+            << appDir + "/../../dashboard/resources/sounds/" + fileName
+            << appDir + "/../../../dashboard/resources/sounds/" + fileName
             << currentDir + "/resources/sounds/" + fileName
-            << currentDir + "/dashboard/resources/sounds/" + fileName;
+            << currentDir + "/dashboard/resources/sounds/" + fileName
+            << currentDir + "/../dashboard/resources/sounds/" + fileName;
 
     for(int i = 0; i < candidates.size(); ++i)
     {
