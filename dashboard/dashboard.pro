@@ -40,3 +40,13 @@ INCLUDEPATH += $$PWD \
                $$PWD/gauges \
                $$PWD/indicators \
                $$PWD/audio
+
+win32 {
+    CONFIG(debug, debug|release) {
+        SOUND_TARGET_DIR = $$OUT_PWD/debug/resources/sounds
+    } else {
+        SOUND_TARGET_DIR = $$OUT_PWD/release/resources/sounds
+    }
+
+    QMAKE_POST_LINK += $$quote(cmd /c if not exist "$$shell_path($$SOUND_TARGET_DIR)" mkdir "$$shell_path($$SOUND_TARGET_DIR)" & xcopy /Y /I "$$shell_path($$PWD/resources/sounds)\\*.wav" "$$shell_path($$SOUND_TARGET_DIR)\\" )
+}
