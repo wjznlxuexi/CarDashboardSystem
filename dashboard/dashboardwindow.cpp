@@ -39,6 +39,7 @@ public:
         : QWidget(parent)
         , m_connected(false)
         , m_blinkOn(true)
+        , m_testWarningType(-1)
         , m_scaleX(1.0)
         , m_scaleY(1.0)
     {
@@ -86,6 +87,14 @@ public:
             update();
         });
         blinkTimer->start();
+
+        m_testWarningTimer = new QTimer(this);
+        m_testWarningTimer->setSingleShot(true);
+        m_testWarningTimer->setInterval(3000);
+        connect(m_testWarningTimer, &QTimer::timeout, [this]() {
+            m_testWarningType = -1;
+            update();
+        });
     }
 
     void setVehicleData(const VehicleData &data)
@@ -97,6 +106,16 @@ public:
     void setConnected(bool connected)
     {
         m_connected = connected;
+        update();
+    }
+
+    void setTestWarning(int warningType)
+    {
+        if(warningType < 0 || warningType >= Warning_Count)
+            return;
+
+        m_testWarningType = warningType;
+        m_testWarningTimer->start();
         update();
     }
 
@@ -236,6 +255,13 @@ private:
         if(m_data.absFault) warnings << "ABS";
         if(m_data.fuel < 15.0) warnings << "LOW FUEL";
         if(m_data.temperature > 95.0) warnings << "HIGH TEMP";
+        if(m_testWarningType >= 0)
+        {
+            static const char *testNames[Warning_Count] = {
+                "SPEED", "OIL", "BAT", "HIGH TEMP", "LOW FUEL", "BRAKE", "AIRBAG", "ABS"
+            };
+            warnings << testNames[m_testWarningType];
+        }
 
         painter.setPen(warnings.isEmpty() ? QColor(78, 255, 136) : QColor(255, 78, 78));
         painter.drawText(screen.adjusted(0, 172 * m_scaleY, 0, 0), Qt::AlignHCenter,
@@ -246,7 +272,7 @@ private:
 
     void drawWarningIcons(QPainter &painter, const QRectF &screen)
     {
-        const bool active[Warning_Count] = {
+        bool active[Warning_Count] = {
             m_data.speedFault,
             false,
             m_data.batteryFault,
@@ -256,6 +282,9 @@ private:
             m_data.airbagFault,
             m_data.absFault
         };
+
+        if(m_testWarningType >= 0 && m_testWarningType < Warning_Count)
+            active[m_testWarningType] = true;
 
         const double iconSize = 28 * qMin(m_scaleX, m_scaleY);
         const double gap = 9 * m_scaleX;
@@ -354,6 +383,8 @@ private:
     VehicleData m_data;
     bool m_connected;
     bool m_blinkOn;
+    int m_testWarningType;
+    QTimer *m_testWarningTimer;
     QPoint m_offset;
     double m_scaleX;
     double m_scaleY;
@@ -378,8 +409,10 @@ DashboardWindow::DashboardWindow(QWidget *parent)
       m_hazardAction(NULL),
       m_muteAction(NULL),
       m_volumeSlider(NULL),
+      m_warningTestTimer(NULL),
       m_currentSoundWarning(-1),
-      m_connected(false)
+      m_connected(false),
+      m_warningTestActive(false)
 {
     setWindowTitle("Car Dashboard System - Dashboard");
     resize(1180, 720);
@@ -417,6 +450,11 @@ void DashboardWindow::createModules()
     m_soundSystem = new WarningSoundSystem(this);
     m_imageDashboard = new ImageDashboardWidget(this);
     m_soundSystem->setVolume(80);
+
+    m_warningTestTimer = new QTimer(this);
+    m_warningTestTimer->setSingleShot(true);
+    m_warningTestTimer->setInterval(3000);
+    connect(m_warningTestTimer, SIGNAL(timeout()), this, SLOT(onWarningTestFinished()));
 }
 
 void DashboardWindow::createCentralLayout()
@@ -623,6 +661,9 @@ int DashboardWindow::highestPriorityWarning(const VehicleData &data) const
 
 void DashboardWindow::updateWarningSound(const VehicleData &data)
 {
+    if(m_warningTestActive)
+        return;
+
     const int warning = highestPriorityWarning(data);
     if(warning == m_currentSoundWarning)
         return;
@@ -732,6 +773,17 @@ void DashboardWindow::onWarningTestTriggered()
 
     const int warningType = action->data().toInt();
     m_warningLights->setWarningActive(warningType, true);
+    if(m_imageDashboard != NULL)
+        m_imageDashboard->setTestWarning(warningType);
+    m_warningTestActive = true;
+    m_warningTestTimer->start();
     m_soundSystem->testSound(warningType);
     statusBar()->showMessage("Testing warning: " + action->text(), 3000);
+}
+
+void DashboardWindow::onWarningTestFinished()
+{
+    m_warningTestActive = false;
+    m_currentSoundWarning = -2;
+    updateWarningSound(m_lastData);
 }
