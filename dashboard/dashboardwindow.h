@@ -9,6 +9,7 @@ class QLabel;
 class QAction;
 class QSlider;
 class QWidget;
+class QTimer;
 
 class NetworkClient;
 class SpeedometerWidget;
@@ -51,6 +52,7 @@ private slots:
     void onMuteToggled(bool checked);
     void onVolumeChanged(int value);
     void onWarningTestTriggered();
+    void onWarningTestFinished();
 
 private:
     void createModules();
@@ -88,10 +90,12 @@ private:
     QAction *m_muteAction;
 
     QSlider *m_volumeSlider;
+    QTimer *m_warningTestTimer;
 
     VehicleData m_lastData;
     int m_currentSoundWarning;
     bool m_connected;
+    bool m_warningTestActive;
 };
 
 #endif // DASHBOARDWINDOW_H
